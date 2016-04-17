@@ -31,7 +31,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/purell"
-	"github.com/go-swagger/go-swagger/jsonpointer"
+	"github.com/go-openapi/jsonpointer"
 )
 
 const (
