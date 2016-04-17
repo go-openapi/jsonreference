@@ -1,5 +1,5 @@
 clone:
-  path: github.com/go-openapi/jsonpointer
+  path: github.com/go-openapi/jsonreference
 
 matrix:
   GO_VERSION:
