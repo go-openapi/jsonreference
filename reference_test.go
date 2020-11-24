@@ -47,6 +47,7 @@ func TestIsRoot(t *testing.T) {
 	}))
 }
 
+// nolint: dupl
 func TestFull(t *testing.T) {
 
 	in := "http://host/path/a/b/c#/f/a/b"
@@ -81,6 +82,7 @@ func TestFull(t *testing.T) {
 	}
 }
 
+// nolint: dupl
 func TestFullURL(t *testing.T) {
 
 	in := "http://host/path/a/b/c"
@@ -156,6 +158,7 @@ func TestFragmentOnly(t *testing.T) {
 	assert.Equal(t, r3.String(), in[1:])
 }
 
+// nolint: dupl
 func TestURLPathOnly(t *testing.T) {
 
 	in := "/documents/document.json"
@@ -190,6 +193,7 @@ func TestURLPathOnly(t *testing.T) {
 	}
 }
 
+// nolint: dupl
 func TestURLRelativePathOnly(t *testing.T) {
 
 	in := "document.json"
@@ -393,13 +397,12 @@ func TestReferenceResolution(t *testing.T) {
 		"g#s/../x", "http://a/b/c/g#s/../x",
 
 		"http:g", "http:g", // for strict parsers
-		//"http:g", "http://a/b/c/g", // for backward compatibility
+		// "http:g", "http://a/b/c/g", // for backward compatibility
 
 	}
 	for i := 0; i < len(checks); i += 2 {
 		child := checks[i]
 		expected := checks[i+1]
-		// fmt.Printf("%d:   %v  ->  %v\n", i/2, child, expected)
 
 		childRef, e := New(child)
 		if e != nil {
