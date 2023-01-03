@@ -47,7 +47,7 @@ func TestIsRoot(t *testing.T) {
 	}))
 }
 
-// nolint: dupl
+//nolint:dupl
 func TestFull(t *testing.T) {
 
 	in := "http://host/path/a/b/c#/f/a/b"
@@ -82,7 +82,7 @@ func TestFull(t *testing.T) {
 	}
 }
 
-// nolint: dupl
+//nolint:dupl
 func TestFullURL(t *testing.T) {
 
 	in := "http://host/path/a/b/c"
@@ -158,7 +158,7 @@ func TestFragmentOnly(t *testing.T) {
 	assert.Equal(t, r3.String(), in[1:])
 }
 
-// nolint: dupl
+//nolint:dupl
 func TestURLPathOnly(t *testing.T) {
 
 	in := "/documents/document.json"
@@ -193,7 +193,7 @@ func TestURLPathOnly(t *testing.T) {
 	}
 }
 
-// nolint: dupl
+//nolint:dupl
 func TestURLRelativePathOnly(t *testing.T) {
 
 	in := "document.json"
