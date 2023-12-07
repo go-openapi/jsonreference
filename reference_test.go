@@ -26,323 +26,215 @@
 package jsonreference
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/go-openapi/jsonpointer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsRoot(t *testing.T) {
-	in := "#"
-	r1, err := New(in)
-	assert.NoError(t, err)
-	assert.True(t, r1.IsRoot())
+	t.Run("with empty fragment", func(t *testing.T) {
+		in := "#"
+		r1, err := New(in)
+		require.NoError(t, err)
+		assert.True(t, r1.IsRoot())
+	})
 
-	in = "#/ok"
-	r1 = MustCreateRef(in)
-	assert.False(t, r1.IsRoot())
+	t.Run("with fragment", func(t *testing.T) {
+		in := "#/ok"
+		r1 := MustCreateRef(in)
+		assert.False(t, r1.IsRoot())
+	})
 
-	assert.Panics(t, assert.PanicTestFunc(func() {
-		MustCreateRef("%2")
-	}))
+	t.Run("with invalid ref", func(t *testing.T) {
+		assert.Panics(t, assert.PanicTestFunc(func() {
+			MustCreateRef("%2")
+		}))
+	})
 }
 
-//nolint:dupl
-func TestFull(t *testing.T) {
-
-	in := "http://host/path/a/b/c#/f/a/b"
-
-	r1, err := New(in)
-	if err != nil {
-		t.Errorf("New(%v) error %s", in, err.Error())
-	}
-
-	if in != r1.String() {
-		t.Errorf("New(%v) = %v, expect %v", in, r1.String(), in)
-	}
-
-	if r1.HasFragmentOnly != false {
-		t.Errorf("New(%v)::HasFragmentOnly %v expect %v", in, r1.HasFragmentOnly, false)
-	}
-
-	if r1.HasFullURL != true {
-		t.Errorf("New(%v)::HasFullURL %v expect %v", in, r1.HasFullURL, true)
-	}
-
-	if r1.HasURLPathOnly != false {
-		t.Errorf("New(%v)::HasURLPathOnly %v expect %v", in, r1.HasURLPathOnly, false)
-	}
-
-	if r1.HasFileScheme != false {
-		t.Errorf("New(%v)::HasFileScheme %v expect %v", in, r1.HasFileScheme, false)
-	}
-
-	if r1.GetPointer().String() != "/f/a/b" {
-		t.Errorf("New(%v)::GetPointer() %v expect %v", in, r1.GetPointer().String(), "/f/a/b")
-	}
-}
-
-//nolint:dupl
 func TestFullURL(t *testing.T) {
+	t.Run("with fragment", func(t *testing.T) {
+		const (
+			in = "http://host/path/a/b/c#/f/a/b"
+		)
 
-	in := "http://host/path/a/b/c"
+		r1, err := New(in)
+		require.NoError(t, err)
+		assert.Equal(t, in, r1.String())
+		require.False(t, r1.HasFragmentOnly)
+		require.True(t, r1.HasFullURL)
+		require.False(t, r1.HasURLPathOnly)
+		require.False(t, r1.HasFileScheme)
+		require.Equal(t, "/f/a/b", r1.GetPointer().String())
+	})
 
-	r1, err := New(in)
-	if err != nil {
-		t.Errorf("New(%v) error %s", in, err.Error())
-	}
+	t.Run("with empty fragment", func(t *testing.T) {
+		const in = "http://host/path/a/b/c"
 
-	if in != r1.String() {
-		t.Errorf("New(%v) = %v, expect %v", in, r1.String(), in)
-	}
-
-	if r1.HasFragmentOnly != false {
-		t.Errorf("New(%v)::HasFragmentOnly %v expect %v", in, r1.HasFragmentOnly, false)
-	}
-
-	if r1.HasFullURL != true {
-		t.Errorf("New(%v)::HasFullURL %v expect %v", in, r1.HasFullURL, true)
-	}
-
-	if r1.HasURLPathOnly != false {
-		t.Errorf("New(%v)::HasURLPathOnly %v expect %v", in, r1.HasURLPathOnly, false)
-	}
-
-	if r1.HasFileScheme != false {
-		t.Errorf("New(%v)::HasFileScheme %v expect %v", in, r1.HasFileScheme, false)
-	}
-
-	if r1.GetPointer().String() != "" {
-		t.Errorf("New(%v)::GetPointer() %v expect %v", in, r1.GetPointer().String(), "")
-	}
+		r1, err := New(in)
+		require.NoError(t, err)
+		assert.Equal(t, in, r1.String())
+		require.False(t, r1.HasFragmentOnly)
+		require.True(t, r1.HasFullURL)
+		require.False(t, r1.HasURLPathOnly)
+		require.False(t, r1.HasFileScheme)
+		require.Empty(t, r1.GetPointer().String())
+	})
 }
 
 func TestFragmentOnly(t *testing.T) {
-
-	in := "#/fragment/only"
+	const in = "#/fragment/only"
 
 	r1, err := New(in)
-	if err != nil {
-		t.Errorf("New(%v) error %s", in, err.Error())
-	}
+	require.NoError(t, err)
+	assert.Equal(t, in, r1.String())
 
-	if in != r1.String() {
-		t.Errorf("New(%v) = %v, expect %v", in, r1.String(), in)
-	}
+	require.True(t, r1.HasFragmentOnly)
+	require.False(t, r1.HasFullURL)
+	require.False(t, r1.HasURLPathOnly)
+	require.False(t, r1.HasFileScheme)
+	require.Equal(t, "/fragment/only", r1.GetPointer().String())
 
-	if r1.HasFragmentOnly != true {
-		t.Errorf("New(%v)::HasFragmentOnly %v expect %v", in, r1.HasFragmentOnly, true)
-	}
+	p, err := jsonpointer.New(r1.referenceURL.Fragment)
+	require.NoError(t, err)
 
-	if r1.HasFullURL != false {
-		t.Errorf("New(%v)::HasFullURL %v expect %v", in, r1.HasFullURL, false)
-	}
+	t.Run("Ref with fragmentOnly", func(t *testing.T) {
+		r2 := Ref{referencePointer: p, HasFragmentOnly: true}
+		assert.Equal(t, in, r2.String())
+	})
 
-	if r1.HasURLPathOnly != false {
-		t.Errorf("New(%v)::HasURLPathOnly %v expect %v", in, r1.HasURLPathOnly, false)
-	}
-
-	if r1.HasFileScheme != false {
-		t.Errorf("New(%v)::HasFileScheme %v expect %v", in, r1.HasFileScheme, false)
-	}
-
-	if r1.GetPointer().String() != "/fragment/only" {
-		t.Errorf("New(%v)::GetPointer() %v expect %v", in, r1.GetPointer().String(), "/fragment/only")
-	}
-
-	p, _ := jsonpointer.New(r1.referenceURL.Fragment)
-	r2 := Ref{referencePointer: p, HasFragmentOnly: true}
-	assert.Equal(t, r2.String(), in)
-
-	r3 := Ref{referencePointer: p, HasFragmentOnly: false}
-	assert.Equal(t, r3.String(), in[1:])
+	t.Run("Ref without fragmentOnly", func(t *testing.T) {
+		r3 := Ref{referencePointer: p, HasFragmentOnly: false}
+		assert.Equal(t, in[1:], r3.String())
+	})
 }
 
-//nolint:dupl
 func TestURLPathOnly(t *testing.T) {
-
-	in := "/documents/document.json"
+	const in = "/documents/document.json"
 
 	r1, err := New(in)
-	if err != nil {
-		t.Errorf("New(%v) error %s", in, err.Error())
-	}
-
-	if in != r1.String() {
-		t.Errorf("New(%v) = %v, expect %v", in, r1.String(), in)
-	}
-
-	if r1.HasFragmentOnly != false {
-		t.Errorf("New(%v)::HasFragmentOnly %v expect %v", in, r1.HasFragmentOnly, false)
-	}
-
-	if r1.HasFullURL != false {
-		t.Errorf("New(%v)::HasFullURL %v expect %v", in, r1.HasFullURL, false)
-	}
-
-	if r1.HasURLPathOnly != true {
-		t.Errorf("New(%v)::HasURLPathOnly %v expect %v", in, r1.HasURLPathOnly, true)
-	}
-
-	if r1.HasFileScheme != false {
-		t.Errorf("New(%v)::HasFileScheme %v expect %v", in, r1.HasFileScheme, false)
-	}
-
-	if r1.GetPointer().String() != "" {
-		t.Errorf("New(%v)::GetPointer() %v expect %v", in, r1.GetPointer().String(), "")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, in, r1.String())
+	require.False(t, r1.HasFragmentOnly)
+	require.False(t, r1.HasFullURL)
+	require.True(t, r1.HasURLPathOnly)
+	require.False(t, r1.HasFileScheme)
+	require.Empty(t, r1.GetPointer().String())
 }
 
-//nolint:dupl
 func TestURLRelativePathOnly(t *testing.T) {
-
-	in := "document.json"
+	const in = "document.json"
 
 	r1, err := New(in)
-	if err != nil {
-		t.Errorf("New(%v) error %s", in, err.Error())
-	}
-
-	if in != r1.String() {
-		t.Errorf("New(%v) = %v, expect %v", in, r1.String(), in)
-	}
-
-	if r1.HasFragmentOnly != false {
-		t.Errorf("New(%v)::HasFragmentOnly %v expect %v", in, r1.HasFragmentOnly, false)
-	}
-
-	if r1.HasFullURL != false {
-		t.Errorf("New(%v)::HasFullURL %v expect %v", in, r1.HasFullURL, false)
-	}
-
-	if r1.HasURLPathOnly != true {
-		t.Errorf("New(%v)::HasURLPathOnly %v expect %v", in, r1.HasURLPathOnly, true)
-	}
-
-	if r1.HasFileScheme != false {
-		t.Errorf("New(%v)::HasFileScheme %v expect %v", in, r1.HasFileScheme, false)
-	}
-
-	if r1.GetPointer().String() != "" {
-		t.Errorf("New(%v)::GetPointer() %v expect %v", in, r1.GetPointer().String(), "")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, in, r1.String())
+	require.False(t, r1.HasFragmentOnly)
+	require.False(t, r1.HasFullURL)
+	require.True(t, r1.HasURLPathOnly)
+	require.False(t, r1.HasFileScheme)
+	require.Empty(t, r1.GetPointer().String())
 }
 
 func TestInheritsInValid(t *testing.T) {
-	in1 := "http://www.test.com/doc.json"
-	in2 := "#/a/b"
+	const (
+		in1 = "http://www.test.com/doc.json"
+		in2 = "#/a/b"
+	)
 
-	r1, _ := New(in1)
-	r2 := Ref{}
-	result, err := r1.Inherits(r2)
-	assert.Error(t, err)
-	assert.Nil(t, result)
+	r1, err := New(in1)
+	require.NoError(t, err)
 
-	r1 = Ref{}
-	r2, _ = New(in2)
-	result, err = r1.Inherits(r2)
-	assert.NoError(t, err)
-	assert.Equal(t, r2, *result)
+	t.Run("inherits from empty Ref", func(t *testing.T) {
+		r2 := Ref{}
+		result, err := r1.Inherits(r2)
+		require.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("inherits from non-empty Ref", func(t *testing.T) {
+		r1 = Ref{}
+		r2, err := New(in2)
+		require.NoError(t, err)
+
+		result, err := r1.Inherits(r2)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.Equal(t, r2, *result)
+	})
 }
 
 func TestInheritsValid(t *testing.T) {
+	const (
+		in1 = "http://www.test.com/doc.json"
+		in2 = "#/a/b"
+		out = in1 + in2
+	)
 
-	in1 := "http://www.test.com/doc.json"
-	in2 := "#/a/b"
-	out := in1 + in2
-
-	r1, _ := New(in1)
-	r2, _ := New(in2)
+	r1, err := New(in1)
+	require.NoError(t, err)
+	r2, err := New(in2)
+	require.NoError(t, err)
 
 	result, err := r1.Inherits(r2)
-	if err != nil {
-		t.Errorf("Inherits(%s,%s) error %s", r1.String(), r2.String(), err.Error())
-	}
+	require.NoError(t, err)
+	require.NotNil(t, result)
 
-	if result.String() != out {
-		t.Errorf("Inherits(%s,%s) = %s, expect %s", r1.String(), r2.String(), result.String(), out)
-	}
-
-	if result.GetPointer().String() != "/a/b" {
-		t.Errorf("result(%v)::GetPointer() %v expect %v", result.String(), result.GetPointer().String(), "/a/b")
-	}
+	assert.Equal(t, out, result.String())
+	assert.Equal(t, "/a/b", result.GetPointer().String())
 }
 
 func TestInheritsDifferentHost(t *testing.T) {
+	const (
+		in1 = "http://www.test.com/doc.json"
+		in2 = "http://www.test2.com/doc.json#bla"
+	)
 
-	in1 := "http://www.test.com/doc.json"
-	in2 := "http://www.test2.com/doc.json#bla"
-
-	r1, _ := New(in1)
-	r2, _ := New(in2)
+	r1, err := New(in1)
+	require.NoError(t, err)
+	r2, err := New(in2)
+	require.NoError(t, err)
 
 	result, err := r1.Inherits(r2)
+	require.NoError(t, err)
+	require.NotNil(t, result)
 
-	if err != nil {
-		t.Errorf("Inherits(%s,%s) should not fail. Error: %s", r1.String(), r2.String(), err.Error())
-	}
-
-	if result.String() != in2 {
-		t.Errorf("Inherits(%s,%s) should be %s but is %s", in1, in2, in2, result)
-	}
-
-	if result.GetPointer().String() != "" {
-		t.Errorf("result(%v)::GetPointer() %v expect %v", result.String(), result.GetPointer().String(), "")
-	}
+	assert.Equal(t, in2, result.String())
+	assert.Empty(t, result.GetPointer().String())
 }
 
 func TestFileScheme(t *testing.T) {
+	const (
+		in1 = "file:///Users/mac/1.json#a"
+		in2 = "file:///Users/mac/2.json#b"
+	)
 
-	in1 := "file:///Users/mac/1.json#a"
-	in2 := "file:///Users/mac/2.json#b"
+	r1, err := New(in1)
+	require.NoError(t, err)
+	r2, err := New(in2)
+	require.NoError(t, err)
 
-	r1, _ := New(in1)
-	r2, _ := New(in2)
-
-	if r1.HasFragmentOnly != false {
-		t.Errorf("New(%v)::HasFragmentOnly %v expect %v", in1, r1.HasFragmentOnly, false)
-	}
-
-	if r1.HasFileScheme != true {
-		t.Errorf("New(%v)::HasFileScheme %v expect %v", in1, r1.HasFileScheme, true)
-	}
-
-	if r1.HasFullFilePath != true {
-		t.Errorf("New(%v)::HasFullFilePath %v expect %v", in1, r1.HasFullFilePath, true)
-	}
-
-	if r1.IsCanonical() != true {
-		t.Errorf("New(%v)::IsCanonical %v expect %v", in1, r1.IsCanonical(), true)
-	}
+	require.False(t, r1.HasFragmentOnly)
+	require.True(t, r1.HasFileScheme)
+	require.True(t, r1.HasFullFilePath)
+	require.True(t, r1.IsCanonical())
+	assert.Empty(t, r1.GetPointer().String())
 
 	result, err := r1.Inherits(r2)
-	if err != nil {
-		t.Errorf("Inherits(%s,%s) should not fail. Error: %s", r1.String(), r2.String(), err.Error())
-	}
-	if result.String() != in2 {
-		t.Errorf("Inherits(%s,%s) should be %s but is %s", in1, in2, in2, result)
-	}
-
-	if result.GetPointer().String() != "" {
-		t.Errorf("result(%v)::GetPointer() %v expect %v", result.String(), result.GetPointer().String(), "")
-	}
+	require.NoError(t, err)
+	assert.Equal(t, in2, result.String())
+	assert.Empty(t, result.GetPointer().String())
 }
 
 func TestReferenceResolution(t *testing.T) {
-
 	// 5.4. Reference Resolution Examples
 	// http://tools.ietf.org/html/rfc3986#section-5.4
+	const base = "http://a/b/c/d;p?q"
 
-	base := "http://a/b/c/d;p?q"
 	baseRef, err := New(base)
-
-	if err != nil {
-		t.Errorf("New(%s) failed error: %s", base, err.Error())
-	}
-	if baseRef.String() != base {
-		t.Errorf("New(%s) %s expected %s", base, baseRef.String(), base)
-	}
+	require.NoError(t, err)
+	require.Equal(t, base, baseRef.String())
 
 	checks := []string{
 		// 5.4.1. Normal Examples
@@ -406,33 +298,20 @@ func TestReferenceResolution(t *testing.T) {
 		expected := checks[i+1]
 
 		childRef, e := New(child)
-		if e != nil {
-			t.Errorf("%d: New(%s) failed error: %s", i/2, child, e.Error())
-		}
+		require.NoErrorf(t, e, "test: %d: New(%s) failed error: %v", i/2, child, e)
 
 		res, e := baseRef.Inherits(childRef)
-		if res == nil {
-			t.Errorf("%d: Inherits(%s, %s) nil not expected", i/2, base, child)
-		}
-		if e != nil {
-			t.Errorf("%d: Inherits(%s) failed error: %s", i/2, child, e.Error())
-		}
-		if res.String() != expected {
-			t.Errorf("%d: Inherits(%s, %s) %s expected %s", i/2, base, child, res.String(), expected)
-		}
+		require.NoErrorf(t, e, "test: %d", i/2)
+		require.NotNilf(t, res, "test: %d", i/2)
+		assert.Equalf(t, expected, res.String(), "test: %d", i/2)
 	}
 }
 
 func TestIdenticalURLEncoded(t *testing.T) {
 	expected, err := New("https://localhost/🌭#/🍔")
-	if err != nil {
-		t.Fatalf("Failed to create jsonreference: %v", err)
-	}
+	require.NoErrorf(t, err, "failed to create jsonreference: %v", err)
+
 	actual, err := New("https://localhost/%F0%9F%8C%AD#/%F0%9F%8D%94")
-	if err != nil {
-		t.Fatalf("Failed to create jsonreference: %v", err)
-	}
-	if !reflect.DeepEqual(expected, actual) {
-		t.Fatalf("expected %v (URL: %#v), got %v (URL: %#v)", expected.String(), expected.referenceURL, actual.String(), actual.referenceURL)
-	}
+	require.NoErrorf(t, err, "failed to create jsonreference: %v", err)
+	require.Equal(t, expected, actual)
 }
