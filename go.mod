@@ -2,7 +2,7 @@ module github.com/go-openapi/jsonreference
 
 require (
 	github.com/go-openapi/jsonpointer v0.20.2
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 )
 
 require (
