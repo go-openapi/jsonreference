@@ -38,6 +38,8 @@ const (
 	fragmentRune = `#`
 )
 
+var ErrChildURL = errors.New("child url is nil")
+
 // New creates a new reference for the given string
 func New(jsonReferenceString string) (Ref, error) {
 
@@ -144,7 +146,7 @@ func (r *Ref) Inherits(child Ref) (*Ref, error) {
 	childURL := child.GetURL()
 	parentURL := r.GetURL()
 	if childURL == nil {
-		return nil, errors.New("child url is nil")
+		return nil, ErrChildURL
 	}
 	if parentURL == nil {
 		return &child, nil
