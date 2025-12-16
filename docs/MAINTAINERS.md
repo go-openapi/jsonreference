@@ -142,7 +142,7 @@ Standard documentation:
 
 Reference documentation (released):
 
-* [godoc](https://pkg.go/dev/go-openapi/jsonpointer)
+* [godoc](https://pkg.go/dev/go-openapi/jsonreference)
 
 ## TODOs & other ideas
 
