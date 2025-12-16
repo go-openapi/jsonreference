@@ -30,6 +30,21 @@ go get github.com/go-openapi/jsonreference
 
 ## Basic usage
 
+```go
+// Creating a new reference
+ref, err := jsonreference.New("http://example.com/doc.json#/definitions/Pet")
+
+// Fragment-only reference
+fragRef := jsonreference.MustCreateRef("#/definitions/Pet")
+
+// Resolving references
+parent, _ := jsonreference.New("http://example.com/base.json")
+child, _ := jsonreference.New("#/definitions/Pet")
+resolved, _ := parent.Inherits(child)
+// Result: "http://example.com/base.json#/definitions/Pet"
+```
+
+
 ## Change log
 
 See <https://github.com/go-openapi/jsonreference/releases>
