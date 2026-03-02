@@ -16,19 +16,19 @@ func TestIsRoot(t *testing.T) {
 		in := "#"
 		r1, err := New(in)
 		require.NoError(t, err)
-		assert.True(t, r1.IsRoot())
+		assert.TrueT(t, r1.IsRoot())
 	})
 
 	t.Run("with fragment", func(t *testing.T) {
 		in := "#/ok"
 		r1 := MustCreateRef(in)
-		assert.False(t, r1.IsRoot())
+		assert.FalseT(t, r1.IsRoot())
 	})
 
 	t.Run("with invalid ref", func(t *testing.T) {
-		assert.Panics(t, assert.PanicTestFunc(func() {
+		assert.Panics(t, func() {
 			MustCreateRef("%2")
-		}))
+		})
 	})
 }
 
@@ -40,12 +40,12 @@ func TestFullURL(t *testing.T) {
 
 		r1, err := New(in)
 		require.NoError(t, err)
-		assert.Equal(t, in, r1.String())
-		require.False(t, r1.HasFragmentOnly)
-		require.True(t, r1.HasFullURL)
-		require.False(t, r1.HasURLPathOnly)
-		require.False(t, r1.HasFileScheme)
-		require.Equal(t, "/f/a/b", r1.GetPointer().String())
+		assert.EqualT(t, in, r1.String())
+		require.FalseT(t, r1.HasFragmentOnly)
+		require.TrueT(t, r1.HasFullURL)
+		require.FalseT(t, r1.HasURLPathOnly)
+		require.FalseT(t, r1.HasFileScheme)
+		require.EqualT(t, "/f/a/b", r1.GetPointer().String())
 	})
 
 	t.Run("with empty fragment", func(t *testing.T) {
@@ -53,11 +53,11 @@ func TestFullURL(t *testing.T) {
 
 		r1, err := New(in)
 		require.NoError(t, err)
-		assert.Equal(t, in, r1.String())
-		require.False(t, r1.HasFragmentOnly)
-		require.True(t, r1.HasFullURL)
-		require.False(t, r1.HasURLPathOnly)
-		require.False(t, r1.HasFileScheme)
+		assert.EqualT(t, in, r1.String())
+		require.FalseT(t, r1.HasFragmentOnly)
+		require.TrueT(t, r1.HasFullURL)
+		require.FalseT(t, r1.HasURLPathOnly)
+		require.FalseT(t, r1.HasFileScheme)
 		require.Empty(t, r1.GetPointer().String())
 	})
 }
@@ -67,25 +67,25 @@ func TestFragmentOnly(t *testing.T) {
 
 	r1, err := New(in)
 	require.NoError(t, err)
-	assert.Equal(t, in, r1.String())
+	assert.EqualT(t, in, r1.String())
 
-	require.True(t, r1.HasFragmentOnly)
-	require.False(t, r1.HasFullURL)
-	require.False(t, r1.HasURLPathOnly)
-	require.False(t, r1.HasFileScheme)
-	require.Equal(t, "/fragment/only", r1.GetPointer().String())
+	require.TrueT(t, r1.HasFragmentOnly)
+	require.FalseT(t, r1.HasFullURL)
+	require.FalseT(t, r1.HasURLPathOnly)
+	require.FalseT(t, r1.HasFileScheme)
+	require.EqualT(t, "/fragment/only", r1.GetPointer().String())
 
 	p, err := jsonpointer.New(r1.referenceURL.Fragment)
 	require.NoError(t, err)
 
 	t.Run("Ref with fragmentOnly", func(t *testing.T) {
 		r2 := Ref{referencePointer: p, HasFragmentOnly: true}
-		assert.Equal(t, in, r2.String())
+		assert.EqualT(t, in, r2.String())
 	})
 
 	t.Run("Ref without fragmentOnly", func(t *testing.T) {
 		r3 := Ref{referencePointer: p, HasFragmentOnly: false}
-		assert.Equal(t, in[1:], r3.String())
+		assert.EqualT(t, in[1:], r3.String())
 	})
 }
 
@@ -94,11 +94,11 @@ func TestURLPathOnly(t *testing.T) {
 
 	r1, err := New(in)
 	require.NoError(t, err)
-	assert.Equal(t, in, r1.String())
-	require.False(t, r1.HasFragmentOnly)
-	require.False(t, r1.HasFullURL)
-	require.True(t, r1.HasURLPathOnly)
-	require.False(t, r1.HasFileScheme)
+	assert.EqualT(t, in, r1.String())
+	require.FalseT(t, r1.HasFragmentOnly)
+	require.FalseT(t, r1.HasFullURL)
+	require.TrueT(t, r1.HasURLPathOnly)
+	require.FalseT(t, r1.HasFileScheme)
 	require.Empty(t, r1.GetPointer().String())
 }
 
@@ -107,11 +107,11 @@ func TestURLRelativePathOnly(t *testing.T) {
 
 	r1, err := New(in)
 	require.NoError(t, err)
-	assert.Equal(t, in, r1.String())
-	require.False(t, r1.HasFragmentOnly)
-	require.False(t, r1.HasFullURL)
-	require.True(t, r1.HasURLPathOnly)
-	require.False(t, r1.HasFileScheme)
+	assert.EqualT(t, in, r1.String())
+	require.FalseT(t, r1.HasFragmentOnly)
+	require.FalseT(t, r1.HasFullURL)
+	require.TrueT(t, r1.HasURLPathOnly)
+	require.FalseT(t, r1.HasFileScheme)
 	require.Empty(t, r1.GetPointer().String())
 }
 
@@ -159,8 +159,8 @@ func TestInheritsValid(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
-	assert.Equal(t, out, result.String())
-	assert.Equal(t, "/a/b", result.GetPointer().String())
+	assert.EqualT(t, out, result.String())
+	assert.EqualT(t, "/a/b", result.GetPointer().String())
 }
 
 func TestInheritsDifferentHost(t *testing.T) {
@@ -178,7 +178,7 @@ func TestInheritsDifferentHost(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
-	assert.Equal(t, in2, result.String())
+	assert.EqualT(t, in2, result.String())
 	assert.Empty(t, result.GetPointer().String())
 }
 
@@ -193,15 +193,15 @@ func TestFileScheme(t *testing.T) {
 	r2, err := New(in2)
 	require.NoError(t, err)
 
-	require.False(t, r1.HasFragmentOnly)
-	require.True(t, r1.HasFileScheme)
-	require.True(t, r1.HasFullFilePath)
-	require.True(t, r1.IsCanonical())
+	require.FalseT(t, r1.HasFragmentOnly)
+	require.TrueT(t, r1.HasFileScheme)
+	require.TrueT(t, r1.HasFullFilePath)
+	require.TrueT(t, r1.IsCanonical())
 	assert.Empty(t, r1.GetPointer().String())
 
 	result, err := r1.Inherits(r2)
 	require.NoError(t, err)
-	assert.Equal(t, in2, result.String())
+	assert.EqualT(t, in2, result.String())
 	assert.Empty(t, result.GetPointer().String())
 }
 
@@ -212,7 +212,7 @@ func TestReferenceResolution(t *testing.T) {
 
 	baseRef, err := New(base)
 	require.NoError(t, err)
-	require.Equal(t, base, baseRef.String())
+	require.EqualT(t, base, baseRef.String())
 
 	checks := []string{
 		// 5.4.1. Normal Examples
@@ -271,7 +271,7 @@ func TestReferenceResolution(t *testing.T) {
 		// "http:g", "http://a/b/c/g", // for backward compatibility
 
 	}
-	for i := 0; i < len(checks); i += 2 {
+	for i := 0; i < len(checks)-1; i += 2 {
 		child := checks[i]
 		expected := checks[i+1]
 
@@ -281,7 +281,7 @@ func TestReferenceResolution(t *testing.T) {
 		res, e := baseRef.Inherits(childRef)
 		require.NoErrorf(t, e, "test: %d", i/2)
 		require.NotNilf(t, res, "test: %d", i/2)
-		assert.Equalf(t, expected, res.String(), "test: %d", i/2)
+		assert.EqualTf(t, expected, res.String(), "test: %d", i/2)
 	}
 }
 

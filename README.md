@@ -36,7 +36,7 @@ go get github.com/go-openapi/jsonreference
 
 ## Dependencies
 
-* https://github.com/go-openapi/jsonpointer
+* <https://github.com/go-openapi/jsonpointer>
 
 ## Basic usage
 
@@ -61,8 +61,8 @@ See <https://github.com/go-openapi/jsonreference/releases>
 
 ## References
 
-* http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-07
-* http://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03
+* <http://tools.ietf.org/html/draft-ietf-appsawg-json-pointer-07>
+* <http://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03>
 
 ## Licensing
 
@@ -115,7 +115,7 @@ Maintainers can cut a new release by either:
 [slack-badge]: https://img.shields.io/badge/slack-blue?link=https%3A%2F%2Fgoswagger.slack.com%2Farchives%2FC04R30YM
 [slack-url]: https://goswagger.slack.com/archives/C04R30YMU
 [discord-badge]: https://img.shields.io/discord/1446918742398341256?logo=discord&label=discord&color=blue
-[discord-url]: https://discord.gg/DrafRmZx
+[discord-url]: https://discord.gg/twZ9BwT3
 
 <!-- Badges: license & compliance -->
 [license-badge]: http://img.shields.io/badge/license-Apache%20v2-orange.svg
