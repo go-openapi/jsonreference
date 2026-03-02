@@ -37,6 +37,6 @@ func TestUrlnorm(t *testing.T) {
 		require.NoError(t, err)
 
 		NormalizeURL(u)
-		assert.Equal(t, testCase.expected, u.String())
+		assert.EqualT(t, testCase.expected, u.String())
 	}
 }
