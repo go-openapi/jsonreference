@@ -7,4 +7,4 @@ require (
 
 require github.com/go-openapi/swag/jsonname v0.25.5 // indirect
 
-go 1.24.0
+go 1.25.0
