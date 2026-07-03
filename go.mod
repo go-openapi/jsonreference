@@ -1,10 +1,8 @@
 module github.com/go-openapi/jsonreference
 
 require (
-	github.com/go-openapi/jsonpointer v0.23.1
+	github.com/go-openapi/jsonpointer v0.24.0
 	github.com/go-openapi/testify/v2 v2.6.0
 )
-
-require github.com/go-openapi/swag/jsonname v0.26.0 // indirect
 
 go 1.25.0
