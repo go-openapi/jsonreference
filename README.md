@@ -14,9 +14,10 @@
 
 An implementation of JSON Reference for golang.
 
-<!--
 ## Announcements
--->
+
+* **2026-07-07** : landing v1.0.0
+  * stable API pledge
 
 ## Status
 
