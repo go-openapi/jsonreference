@@ -44,9 +44,11 @@ func normalizeURLSeeds() []string {
 	return []string{
 		"",
 		"/folder/file",
-		"HTTPs://xYz.cOm:443/folder//file",
+		mixedCaseDefaultPort,
 		"HTTP://xYz.cOm:80/folder//file",
 		"http://xyz.com:8080/folder",
+		"https://xyz.com/a//b///c////d",
+		"https://xyz.com////",
 		"postGRES://xYz.cOm:5432/folder//file",
 		userinfoDefaultPort + "?q=1#/a~1b",
 		"https://[2001:DB8::1]:443/folder",

@@ -20,6 +20,9 @@ const (
 
 	ipv6NonDefaultPort = "https://[2001:db8::1]:8443/folder"
 
+	// a default port, an upper-cased scheme and host, and a duplicate slash, all at once.
+	mixedCaseDefaultPort = "HTTPs://xYz.cOm:443/folder//file"
+
 	// userinfo holds a colon of its own, which the port removal must not read as a port.
 	//nolint:gosec // test URLs carrying userinfo, not credentials
 	userinfoDefaultPort = "https://user:pw@xYz.cOm:443/folder"
@@ -33,7 +36,7 @@ func TestUrlnorm(t *testing.T) {
 		expected string
 	}{
 		{
-			url:      "HTTPs://xYz.cOm:443/folder//file",
+			url:      mixedCaseDefaultPort,
 			expected: "https://xyz.com/folder/file",
 		},
 		{
@@ -63,6 +66,15 @@ func TestUrlnorm(t *testing.T) {
 		{
 			url:      degenerateHostHTTP,
 			expected: degenerateHostHTTP,
+		},
+		{
+			// a run of slashes collapses to one, however long the run is
+			url:      "https://xyz.com/a//b///c////d",
+			expected: "https://xyz.com/a/b/c/d",
+		},
+		{
+			url:      "https://xyz.com////",
+			expected: "https://xyz.com/",
 		},
 		{
 			url:      "https://:]:443",

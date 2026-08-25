@@ -5,7 +5,6 @@ package internal
 
 import (
 	"net/url"
-	"regexp"
 	"strings"
 )
 
@@ -13,9 +12,6 @@ const (
 	defaultHTTPPort  = "80"
 	defaultHTTPSPort = "443"
 )
-
-// Regular expressions used by the normalizations.
-var rxDupSlashes = regexp.MustCompile(`/{2,}`)
 
 // NormalizeURL will normalize the specified URL
 // This was added to replace a previous call to the no longer maintained purell library:
@@ -88,8 +84,30 @@ func defaultPortForScheme(scheme string) string {
 	}
 }
 
+// removeDuplicateSlashes collapses every run of slashes in the path to a single one, however
+// long the run is: "/a//b///c" becomes "/a/b/c".
+//
+// A path holding no "//" is left as it is, which is the common case and costs one scan and no
+// allocation.
 func removeDuplicateSlashes(u *url.URL) {
-	if len(u.Path) > 0 {
-		u.Path = rxDupSlashes.ReplaceAllString(u.Path, "/")
+	const doubleSlash = "//"
+
+	start := strings.Index(u.Path, doubleSlash)
+	if start < 0 {
+		return
 	}
+
+	var collapsed strings.Builder
+	collapsed.Grow(len(u.Path))
+	collapsed.WriteString(u.Path[:start+1]) // everything up to and including the first slash of the run
+
+	for i := start + 1; i < len(u.Path); i++ {
+		c := u.Path[i]
+		if c == '/' && u.Path[i-1] == '/' {
+			continue
+		}
+		collapsed.WriteByte(c)
+	}
+
+	u.Path = collapsed.String()
 }
