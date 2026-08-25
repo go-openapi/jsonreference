@@ -10,15 +10,12 @@ import (
 )
 
 const (
-	defaultHTTPPort  = ":80"
-	defaultHTTPSPort = ":443"
+	defaultHTTPPort  = "80"
+	defaultHTTPSPort = "443"
 )
 
 // Regular expressions used by the normalizations.
-var (
-	rxPort       = regexp.MustCompile(`(:\d+)/?$`)
-	rxDupSlashes = regexp.MustCompile(`/{2,}`)
-)
+var rxDupSlashes = regexp.MustCompile(`/{2,}`)
 
 // NormalizeURL will normalize the specified URL
 // This was added to replace a previous call to the no longer maintained purell library:
@@ -55,15 +52,39 @@ func lowercaseHost(u *url.URL) {
 	}
 }
 
+// removeDefaultPort drops :80 from an http URL and :443 from an https one.
+//
+// The port stays when dropping it would leave an authority url.Parse no longer accepts, so the
+// shortened host is parsed before being kept. url.Parse reads "https://:a:443" as the host ":a"
+// on port 443, and ":a" on its own is an invalid port, so "https://:a" no longer parses.
+//
+// A degenerate authority can spell a default port twice - url.Parse reads "http://:80:80" as the
+// host ":80" on port 80 - so removal repeats until nothing more comes off. Each pass shortens the
+// host, so the loop ends, and normalizing the result again changes nothing.
 func removeDefaultPort(u *url.URL) {
-	if len(u.Host) > 0 {
-		scheme := strings.ToLower(u.Scheme)
-		u.Host = rxPort.ReplaceAllStringFunc(u.Host, func(val string) string {
-			if (scheme == "http" && val == defaultHTTPPort) || (scheme == "https" && val == defaultHTTPSPort) {
-				return ""
-			}
-			return val
-		})
+	for {
+		port := u.Port()
+		if port == "" || port != defaultPortForScheme(strings.ToLower(u.Scheme)) {
+			return
+		}
+
+		host := strings.TrimSuffix(u.Host, ":"+port)
+		if _, err := url.Parse("//" + host); err != nil {
+			return
+		}
+
+		u.Host = host
+	}
+}
+
+func defaultPortForScheme(scheme string) string {
+	switch scheme {
+	case "http":
+		return defaultHTTPPort
+	case "https":
+		return defaultHTTPSPort
+	default:
+		return ""
 	}
 }
 
