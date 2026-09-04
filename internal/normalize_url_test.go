@@ -4,18 +4,47 @@
 package internal
 
 import (
+	"fmt"
+	"iter"
 	"net/url"
+	"slices"
 	"testing"
 
 	"github.com/go-openapi/testify/v2/assert"
 	"github.com/go-openapi/testify/v2/require"
 )
 
-// URLs spelled in more than one test in this package.
+func TestUrlnorm(t *testing.T) {
+	for testCase := range urlTestCases() {
+		t.Run(fmt.Sprintf("should normalize URL: %q", testCase.url), func(t *testing.T) {
+			u, err := url.Parse(testCase.url)
+			if testCase.expectErr {
+				require.Error(t, err, "expected url.Parse to fail")
+				return
+			}
+
+			require.NoError(t, err)
+
+			NormalizeURL(u)
+			normalized := u.String()
+			assert.EqualTf(t, testCase.expected, normalized, "got an unexpected normalization: %s", normalized)
+
+			_, err = url.Parse(normalized)
+			require.NoErrorf(t, err, "normalizing %q yielded an URL that no longer parses", testCase.url)
+		})
+	}
+}
+
+type urlTestCase struct {
+	url       string
+	expected  string // expected normalized url
+	expectErr bool   // expected error when true
+}
+
 const (
 	// url.Parse reads these as the host ":a" on a default port, so dropping the port would
 	// leave "https://:a", which no longer parses.
-	degenerateHostHTTPS = "https://:a:443"
+	degenerateHostHTTPS = "https://:a:443" // since go1.26 this degenerate case is no longer tolerated
 	degenerateHostHTTP  = "http://:a:80"
 
 	ipv6NonDefaultPort = "https://[2001:db8::1]:8443/folder"
@@ -30,11 +59,8 @@ const (
 	userinfoNormalized = "https://user:pw@xyz.com/folder"
 )
 
-func TestUrlnorm(t *testing.T) {
-	testCases := []struct {
-		url      string
-		expected string
-	}{
+func urlTestCases() iter.Seq[urlTestCase] {
+	return slices.Values([]urlTestCase{
 		{
 			url:      mixedCaseDefaultPort,
 			expected: "https://xyz.com/folder/file",
@@ -60,12 +86,19 @@ func TestUrlnorm(t *testing.T) {
 			expected: ipv6NonDefaultPort,
 		},
 		{
-			url:      degenerateHostHTTPS,
-			expected: degenerateHostHTTPS,
+			// Since go1.26, url.Parse rejects a colon outside a bracketed IPv6 host on an http or https URL
+			// (GODEBUG urlstrictcolons=1, the default from a go.mod declaring go 1.26 or later). Both $refs below
+			// used to parse - the first as the host ":a" on port 443, the second as "0:443" on port 443 - and both
+			// now fail. normalizeURI logs a warning, repairs the $ref to the empty URI and resolves it against the
+			// base, so the base itself comes back.
+			url:       degenerateHostHTTPS,
+			expected:  degenerateHostHTTPS,
+			expectErr: true,
 		},
 		{
-			url:      degenerateHostHTTP,
-			expected: degenerateHostHTTP,
+			url:       degenerateHostHTTP,
+			expected:  degenerateHostHTTP,
+			expectErr: true,
 		},
 		{
 			// a run of slashes collapses to one, however long the run is
@@ -77,28 +110,16 @@ func TestUrlnorm(t *testing.T) {
 			expected: "https://xyz.com/",
 		},
 		{
-			url:      "https://:]:443",
-			expected: "https://:]:443",
+			url:       "https://:]:443",
+			expected:  "https://:]:443",
+			expectErr: true,
 		},
 		{
 			// the host is ":80" on port 80, so the removal has to run twice. Emptying the host
 			// drops the "//" as well, which url.URL.String has always done.
-			url:      "http://:80:80",
-			expected: "http:",
+			url:       "http://:80:80",
+			expected:  "http:",
+			expectErr: true,
 		},
-	}
-
-	for _, toPin := range testCases {
-		testCase := toPin
-
-		u, err := url.Parse(testCase.url)
-		require.NoError(t, err)
-
-		NormalizeURL(u)
-		normalized := u.String()
-		assert.EqualT(t, testCase.expected, normalized)
-
-		_, err = url.Parse(normalized)
-		require.NoErrorf(t, err, "normalizing %q yielded a URL that no longer parses", testCase.url)
-	}
+	})
 }
